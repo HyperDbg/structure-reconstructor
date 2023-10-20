@@ -13,6 +13,96 @@ static CODE: &'static [u8] = &[
     0xDA, 0x02, 0x00,
 ];
 
+struct StructStoredDetail {
+    rip: u64,
+    context: u64,
+    index: u32,
+    size: u8,
+}
+
+impl StructStoredDetail {
+    fn new(rip: u64, context: u64, index: u32, size: u8) -> Self {
+        StructStoredDetail {
+            rip,
+            context,
+            index,
+            size,
+        }
+    }
+}
+
+// Define a global vector to store StructStoredDetail
+static mut MY_VECTOR: Vec<StructStoredDetail> = Vec::new();
+
+fn add_to_vector_if_not_exists(rip: u64, context: u64, index: u32, size: u8) -> bool {
+    // Safety: Using unsafe to work with the global vector
+    unsafe {
+        if MY_VECTOR.iter().any(|item| item.rip == rip && item.context == context && item.index == index && item.size == size) {
+            // The item is already in the vector, return false
+            false
+        } else {
+            // The item is not in the vector, add it and return true
+            MY_VECTOR.push(StructStoredDetail::new(rip, context, index, size));
+            true
+        }
+    }
+}
+
+fn print_vector() {
+    // Safety: Using unsafe to work with the global vector
+    unsafe {
+        // Sort the vector by the "index" field
+        MY_VECTOR.sort_by(|a, b| a.index.cmp(&b.index));
+
+        for item in &MY_VECTOR {
+            println!("rip: {}, context: {}, index: {}, size: {}", item.rip, item.context, item.index, item.size);
+        }
+    }
+}
+
+fn print_structure() {
+
+    let mut current_index = 0;
+    let mut first_index = true;
+    let mut field_index = 0;
+
+    // Safety: Using unsafe to work with the global vector
+    unsafe {
+        // Sort the vector by the "index" field
+        MY_VECTOR.sort_by(|a, b| a.index.cmp(&b.index));
+
+        println!("typedef struct MY_STRUCT {{");
+        for item in &MY_VECTOR {
+
+            if item.index != current_index || first_index == true {
+
+                current_index = item.index;
+                first_index = false;
+
+                print!("\t/* 0x{:04x} *\\ ", item.index);
+
+                if item.size == 64 {
+                    print!("long long Field{}", field_index);
+                } else if item.size == 32 {
+                    print!("int Field{}", field_index);
+                } else if item.size == 32 {
+                    print!("char Field{}", field_index);
+                } else {
+                    print!("unknown Field{}", field_index);
+                }
+
+                field_index = field_index + 1;
+
+                println!(";");
+            }
+
+
+
+        }
+        println!("}}");
+    }
+}
+
 fn zydis_len_disasm(code: &[u8]) -> zydis::Result<u8> {
     let fmt = Formatter::intel();
     let dec = Decoder::new64();
@@ -27,6 +117,30 @@ fn zydis_len_disasm(code: &[u8]) -> zydis::Result<u8> {
 }
 
 fn zydis_disasm(code: &[u8], rip: u64, single_instruction: bool) -> zydis::Result<()> {
+
+    let fmt = Formatter::intel();
+    let dec = Decoder::new64();
+
+    for insn_info in dec.decode_all::<VisibleOperands>(code, rip) {
+        let (ip, _raw_bytes, insn) = insn_info?;
+
+        //
+        // We use Some(ip) here since we want absolute addressing based on the given
+        // instruction pointer. If we wanted relative addressing, we'd use `None` instead
+        //
+        println!("zydis {:016x} {}", ip, fmt.format(Some(ip), &insn)?);
+
+        if single_instruction { break; }
+    }
+
+    Ok(())
+}
+
+fn zydis_disasm_interpret(code: &[u8],
+                          rip: u64,
+                          base: u64,
+                          context: u64,
+                          single_instruction: bool) -> zydis::Result<()> {
 
     let fmt = Formatter::intel();
     let dec = Decoder::new64();
@@ -52,9 +166,10 @@ fn zydis_disasm(code: &[u8], rip: u64, single_instruction: bool) -> zydis::Resul
 
         println!("zydis {:016x} {}", ip, fmt.format(Some(ip), &insn)?);
 
-        if insn.operand_width != 32 && insn.operand_width != 64 {
+        /* if insn.operand_width != 32 && insn.operand_width != 64 {
             panic!("panic");
-        }
+        }*/
+        add_to_vector_if_not_exists(rip, context, (context - base) as u32, insn.operand_width);
 
         if single_instruction { break; }
     }
@@ -114,10 +229,10 @@ fn main() -> io::Result<()>  {
     let file_path = &args[2];
      */
 
-    let hex_address = "ffff870407cc8080";
+    let hex_address_base = "ffff870407cc8080";
     let file_path = "C:\\Users\\sina\\Desktop\\log_open.txt";
 
-    let hex_address = hex_address.trim();
+    let hex_address_base = hex_address_base.trim();
     let file_address = file_path.trim();
 
     let file = File::open(file_address)?;
@@ -226,13 +341,15 @@ fn main() -> io::Result<()>  {
                 */
 
                 let rip_u64 = parse_hex_to_u64(rip).unwrap();
+                let context_u64 = parse_hex_to_u64(context).unwrap();
+                let base_u64 = parse_hex_to_u64(hex_address_base).unwrap();
 
                 //
                 // Convert the Vec<u8> to a &[u8] slice
                 //
                 let slice_u8: &[u8] = &bytes;
 
-                match zydis_disasm(slice_u8, rip_u64, true) {
+                match zydis_disasm_interpret(slice_u8, rip_u64, base_u64,context_u64, true) {
                     Ok(result) => {
                         // The disassembly was successful, so you can work with the result
                         // break;
@@ -249,5 +366,9 @@ fn main() -> io::Result<()>  {
             }
         }
     }
+
+    print_vector();
+    print_structure();
+
     Ok(())
 }
