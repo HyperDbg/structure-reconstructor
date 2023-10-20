@@ -26,7 +26,7 @@ fn zydis_len_disasm(code: &[u8]) -> zydis::Result<u8> {
     Ok(0)
 }
 
-fn zydis_disasm(code: &[u8], rip: u64) -> zydis::Result<()> {
+fn zydis_disasm(code: &[u8], rip: u64, single_instruction: bool) -> zydis::Result<()> {
 
     let fmt = Formatter::intel();
     let dec = Decoder::new64();
@@ -43,7 +43,20 @@ fn zydis_disasm(code: &[u8], rip: u64) -> zydis::Result<()> {
         // We use Some(ip) here since we want absolute addressing based on the given
         // instruction pointer. If we wanted relative addressing, we'd use `None` instead
         //
-        println!("zydis 0x{:016X} {}", ip, fmt.format(Some(ip), &insn)?);
+        println!("operand_width: {}, length: {}, address_width: {}, opcode: {}, operand_count: {}",
+                 insn.operand_width,
+                 insn.length,
+                 insn.address_width,
+                 insn.opcode,
+                 insn.operand_count);
+
+        println!("zydis {:016x} {}", ip, fmt.format(Some(ip), &insn)?);
+
+        if insn.operand_width != 32 && insn.operand_width != 64 {
+            panic!("panic");
+        }
+
+        if single_instruction { break; }
     }
 
     Ok(())
@@ -126,23 +139,88 @@ fn main() -> io::Result<()>  {
         let buffer1 = json["buffer1"].as_str().unwrap();
         let buffer2 = json["buffer2"].as_str().unwrap();
         let inst_len = json["inst_len"].as_str().unwrap();
+        let mut padding1 = String::new(); // Initialize an empty String
+        let mut padding2 = String::new(); // Initialize an empty String
+
+        let diff_len1 = 16 - buffer1.len();
+        padding1 = "0".repeat(diff_len1);
+
+        let diff_len2 = 16 - buffer2.len();
+        padding2 = "0".repeat(diff_len2);
+
+        let combined_buffer1 = padding1 + buffer1; // Prepend the padding to buffer1
+        let combined_buffer2 = padding2 + buffer2; // Prepend the padding to buffer1
+
 
         println!("=================================================================");
-        println!("rip: {}", rip);
-        println!("context: {}", context);
-        println!("buffer1: {}", buffer1);
-        println!("buffer2: {}", buffer2);
-        println!("inst_len: {}", inst_len);
 
-        let combined_buffer = buffer1.to_string() + buffer2;
+        println!("json rip: {}", rip);
+        println!("json context: {}", context);
+        println!("json buffer1: {}", buffer1);
+        println!("json buffer2: {}", buffer2);
+        println!("json inst_len: {}", inst_len);
 
+        //
+        // Reverse the byte order within each pair of characters (buffer1)
+        //
+        let reversed_hex_string_buffer1: String = combined_buffer1
+            .chars()
+            .collect::<Vec<_>>()
+            .chunks(2)
+            .rev()
+            .flatten()
+            .collect();
+
+        //
+        // Add spaces between the reversed pairs (buffer1)
+        //
+        let formatted_string_buffer1: String = reversed_hex_string_buffer1
+            .chars()
+            .collect::<Vec<_>>()
+            .chunks(2)
+            .map(|chunk| chunk.iter().collect::<String>())
+            .collect::<Vec<String>>()
+            .join(" ");
+
+        //
+        // Reverse the byte order within each pair of characters (buffer2)
+        //
+        let reversed_hex_string_buffer2: String = combined_buffer2
+            .chars()
+            .collect::<Vec<_>>()
+            .chunks(2)
+            .rev()
+            .flatten()
+            .collect();
+
+        //
+        // Add spaces between the reversed pairs (buffer2)
+        //
+        let formatted_string_buffer2: String = reversed_hex_string_buffer2
+            .chars()
+            .collect::<Vec<_>>()
+            .chunks(2)
+            .map(|chunk| chunk.iter().collect::<String>())
+            .collect::<Vec<String>>()
+            .join(" ");
+
+
+        println!("buffer1: {} combined_buffer1: {}", buffer1, combined_buffer1);
+        println!("buffer2: {} combined_buffer2: {}", buffer2, combined_buffer2);
+        println!("final buffer: {} {}", formatted_string_buffer1, formatted_string_buffer1);
+
+        let combined_buffer = (formatted_string_buffer1.to_string() + &*formatted_string_buffer2).replace(" ","");
+
+        println!("combined buffer: {}", combined_buffer);
 
         match hex_string_to_bytes(&*combined_buffer) {
             Ok(bytes) => {
-                // Print the bytes as integers
 
                 /*
-                 byte in &bytes {
+                //
+                // Print the bytes as integers
+                //
+                for byte in &bytes {
                     println!("0x{:02x}", byte);
                 }
                 */
@@ -152,15 +230,12 @@ fn main() -> io::Result<()>  {
                 //
                 // Convert the Vec<u8> to a &[u8] slice
                 //
-
-                //
-                // Convert the Vec<u8> to a &[u8] slice
-                //
                 let slice_u8: &[u8] = &bytes;
 
-                match zydis_disasm(slice_u8, rip_u64) {
+                match zydis_disasm(slice_u8, rip_u64, true) {
                     Ok(result) => {
                         // The disassembly was successful, so you can work with the result
+                        // break;
                     },
                     Err(err) => {
                         // The disassembly encountered an error. You can handle it gracefully here.
@@ -168,7 +243,6 @@ fn main() -> io::Result<()>  {
                         println!("Disassembly error: {}", err);
                     }
                 }
-
             },
             Err(err) => {
                 println!("Error: {}", err);
