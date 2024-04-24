@@ -19,28 +19,26 @@ Before you begin, ensure you have the latest version of Rust installed on your s
 
 To get a local copy up and running follow these simple steps:
 
-1. **Clone the repository**
-
-2. **Compile the project:**
+1. **Compile the project:**
 
    ```bash
    cargo build --release
    ```
 
-3. **Run the tool:**
+2. **Run the tool:**
 
    ```bash
-   cargo run --release
+   cargo run --release -- ffff870407cc8080 .\example\log_generated_from_TRM.txt
    ```
+Note: You could gather the same log for your target user-mode and kernel-mode structure using the VMM hypervisor.
 
 ## Usage
 
-After running the tool, it will read the input logs from TRM, analyze them, and suggest possible data structure layouts. Usage details and options can be accessed by:
-
+After running the tool, it will read the input logs from TRM, analyze them, and suggest possible data structure layouts. 
 ```bash
-cargo run -- --help
+target\release\reconst.exe <hex_address_base> <file_path>
 ```
 
 ## License
 
-Distributed under the GPLv3 License. See `LICENSE` for more information.
+Distributed under the **GPLv3** License. See `LICENSE` for more information.
