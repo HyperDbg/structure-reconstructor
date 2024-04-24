@@ -216,21 +216,18 @@ fn main() -> io::Result<()>  {
     //
     // Get the command-line arguments
     //
-
-    /*
     let args: Vec<String> = env::args().collect();
 
     if args.len() != 3 {
-        eprintln!("Usage: {} <hex_address> <file_path>", &args[0]);
+        eprintln!("Usage: {} <hex_address_base> <file_path>", &args[0]);
         std::process::exit(1);
     }
 
-    let hex_address = &args[1];
+    let hex_address_base = &args[1];
     let file_path = &args[2];
-     */
 
-    let hex_address_base = "ffff870407cc8080";
-    let file_path = "C:\\Users\\sina\\Desktop\\log_open.txt";
+    // let hex_address_base = "ffff870407cc8080";
+    // let file_path = "C:\\Users\\sina\\Desktop\\log_open.txt";
 
     let hex_address_base = hex_address_base.trim();
     let file_address = file_path.trim();

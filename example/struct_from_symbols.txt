@@ -1,0 +1,377 @@
+typedef struct _EPROCESS
+{
+  /* 0x0000 */ struct _KPROCESS Pcb;
+  
+  typedef struct _KPROCESS
+{
+  /* 0x0000 */ struct _DISPATCHER_HEADER Header;
+  /* 0x0018 */ struct _LIST_ENTRY ProfileListHead;
+  /* 0x0028 */ uint64_t DirectoryTableBase;
+  /* 0x0030 */ struct _LIST_ENTRY ThreadListHead;
+  /* 0x0040 */ uint32_t ProcessLock;
+  /* 0x0044 */ uint32_t ProcessTimerDelay;
+  /* 0x0048 */ uint64_t DeepFreezeStartTime;
+  /* 0x0050 */ struct _KAFFINITY_EX Affinity;
+  /* 0x0158 */ struct _LIST_ENTRY ReadyListHead;
+  /* 0x0168 */ struct _SINGLE_LIST_ENTRY SwapListEntry;
+  /* 0x0170 */ volatile struct _KAFFINITY_EX ActiveProcessors;
+  union
+  {
+    struct /* bitfield */
+    {
+      /* 0x0278 */ uint32_t AutoAlignment : 1; /* bit position: 0 */
+      /* 0x0278 */ uint32_t DisableBoost : 1; /* bit position: 1 */
+      /* 0x0278 */ uint32_t DisableQuantum : 1; /* bit position: 2 */
+      /* 0x0278 */ uint32_t DeepFreeze : 1; /* bit position: 3 */
+      /* 0x0278 */ uint32_t TimerVirtualization : 1; /* bit position: 4 */
+      /* 0x0278 */ uint32_t CheckStackExtents : 1; /* bit position: 5 */
+      /* 0x0278 */ uint32_t CacheIsolationEnabled : 1; /* bit position: 6 */
+      /* 0x0278 */ uint32_t PpmPolicy : 4; /* bit position: 7 */
+      /* 0x0278 */ uint32_t VaSpaceDeleted : 1; /* bit position: 11 */
+      /* 0x0278 */ uint32_t MultiGroup : 1; /* bit position: 12 */
+      /* 0x0278 */ uint32_t ReservedFlags : 19; /* bit position: 13 */
+    }; /* bitfield */
+    /* 0x0278 */ volatile int32_t ProcessFlags;
+  }; /* size: 0x0004 */
+  /* 0x027c */ uint32_t ActiveGroupsMask;
+  /* 0x0280 */ char BasePriority;
+  /* 0x0281 */ char QuantumReset;
+  /* 0x0282 */ char Visited;
+  /* 0x0283 */ union _KEXECUTE_OPTIONS Flags;
+  /* 0x0284 */ uint16_t ThreadSeed[32];
+  /* 0x02c4 */ uint16_t IdealProcessor[32];
+  /* 0x0304 */ uint16_t IdealNode[32];
+  /* 0x0344 */ uint16_t IdealGlobalNode;
+  /* 0x0346 */ uint16_t Spare1;
+  /* 0x0348 */ volatile union _KSTACK_COUNT StackCount;
+  /* 0x034c */ long Padding_0;
+  /* 0x0350 */ struct _LIST_ENTRY ProcessListEntry;
+  /* 0x0360 */ uint64_t CycleTime;
+  /* 0x0368 */ uint64_t ContextSwitches;
+  /* 0x0370 */ struct _KSCHEDULING_GROUP* SchedulingGroup;
+  /* 0x0378 */ uint32_t FreezeCount;
+  /* 0x037c */ uint32_t KernelTime;
+  /* 0x0380 */ uint32_t UserTime;
+  /* 0x0384 */ uint32_t ReadyTime;
+  /* 0x0388 */ uint64_t UserDirectoryTableBase;
+  /* 0x0390 */ uint8_t AddressPolicy;
+  /* 0x0391 */ uint8_t Spare2[71];
+  /* 0x03d8 */ void* InstrumentationCallback;
+  /* 0x03e0 */ union _TAG_UNNAMED_1 SecureState;
+  /* 0x03e8 */ uint64_t KernelWaitTime;
+  /* 0x03f0 */ uint64_t UserWaitTime;
+  /* 0x03f8 */ uint64_t LastRebalanceQpc;
+  /* 0x0400 */ void* PerProcessorCycleTimes;
+  /* 0x0408 */ uint64_t ExtendedFeatureDisableMask;
+  /* 0x0410 */ uint16_t PrimaryGroup;
+  /* 0x0412 */ uint16_t Spare3[3];
+  /* 0x0418 */ void* UserCetLogging;
+  /* 0x0420 */ struct _LIST_ENTRY CpuPartitionList;
+  /* 0x0430 */ uint64_t EndPadding[1];
+} KPROCESS, *PKPROCESS; /* size: 0x0438 */
+  
+  
+  
+  /* 0x0438 */ struct _EX_PUSH_LOCK ProcessLock;
+  /* 0x0440 */ void* UniqueProcessId;
+  /* 0x0448 */ struct _LIST_ENTRY ActiveProcessLinks;
+  /* 0x0458 */ struct _EX_RUNDOWN_REF RundownProtect;
+  union
+  {
+    /* 0x0460 */ uint32_t Flags2;
+    struct /* bitfield */
+    {
+      /* 0x0460 */ uint32_t JobNotReallyActive : 1; /* bit position: 0 */
+      /* 0x0460 */ uint32_t AccountingFolded : 1; /* bit position: 1 */
+      /* 0x0460 */ uint32_t NewProcessReported : 1; /* bit position: 2 */
+      /* 0x0460 */ uint32_t ExitProcessReported : 1; /* bit position: 3 */
+      /* 0x0460 */ uint32_t ReportCommitChanges : 1; /* bit position: 4 */
+      /* 0x0460 */ uint32_t LastReportMemory : 1; /* bit position: 5 */
+      /* 0x0460 */ uint32_t ForceWakeCharge : 1; /* bit position: 6 */
+      /* 0x0460 */ uint32_t CrossSessionCreate : 1; /* bit position: 7 */
+      /* 0x0460 */ uint32_t NeedsHandleRundown : 1; /* bit position: 8 */
+      /* 0x0460 */ uint32_t RefTraceEnabled : 1; /* bit position: 9 */
+      /* 0x0460 */ uint32_t PicoCreated : 1; /* bit position: 10 */
+      /* 0x0460 */ uint32_t EmptyJobEvaluated : 1; /* bit position: 11 */
+      /* 0x0460 */ uint32_t DefaultPagePriority : 3; /* bit position: 12 */
+      /* 0x0460 */ uint32_t PrimaryTokenFrozen : 1; /* bit position: 15 */
+      /* 0x0460 */ uint32_t ProcessVerifierTarget : 1; /* bit position: 16 */
+      /* 0x0460 */ uint32_t RestrictSetThreadContext : 1; /* bit position: 17 */
+      /* 0x0460 */ uint32_t AffinityPermanent : 1; /* bit position: 18 */
+      /* 0x0460 */ uint32_t AffinityUpdateEnable : 1; /* bit position: 19 */
+      /* 0x0460 */ uint32_t PropagateNode : 1; /* bit position: 20 */
+      /* 0x0460 */ uint32_t ExplicitAffinity : 1; /* bit position: 21 */
+      /* 0x0460 */ uint32_t ProcessExecutionState : 2; /* bit position: 22 */
+      /* 0x0460 */ uint32_t EnableReadVmLogging : 1; /* bit position: 24 */
+      /* 0x0460 */ uint32_t EnableWriteVmLogging : 1; /* bit position: 25 */
+      /* 0x0460 */ uint32_t FatalAccessTerminationRequested : 1; /* bit position: 26 */
+      /* 0x0460 */ uint32_t DisableSystemAllowedCpuSet : 1; /* bit position: 27 */
+      /* 0x0460 */ uint32_t ProcessStateChangeRequest : 2; /* bit position: 28 */
+      /* 0x0460 */ uint32_t ProcessStateChangeInProgress : 1; /* bit position: 30 */
+      /* 0x0460 */ uint32_t InPrivate : 1; /* bit position: 31 */
+    }; /* bitfield */
+  }; /* size: 0x0004 */
+  union
+  {
+    /* 0x0464 */ uint32_t Flags;
+    struct /* bitfield */
+    {
+      /* 0x0464 */ uint32_t CreateReported : 1; /* bit position: 0 */
+      /* 0x0464 */ uint32_t NoDebugInherit : 1; /* bit position: 1 */
+      /* 0x0464 */ uint32_t ProcessExiting : 1; /* bit position: 2 */
+      /* 0x0464 */ uint32_t ProcessDelete : 1; /* bit position: 3 */
+      /* 0x0464 */ uint32_t ManageExecutableMemoryWrites : 1; /* bit position: 4 */
+      /* 0x0464 */ uint32_t VmDeleted : 1; /* bit position: 5 */
+      /* 0x0464 */ uint32_t OutswapEnabled : 1; /* bit position: 6 */
+      /* 0x0464 */ uint32_t Outswapped : 1; /* bit position: 7 */
+      /* 0x0464 */ uint32_t FailFastOnCommitFail : 1; /* bit position: 8 */
+      /* 0x0464 */ uint32_t Wow64VaSpace4Gb : 1; /* bit position: 9 */
+      /* 0x0464 */ uint32_t AddressSpaceInitialized : 2; /* bit position: 10 */
+      /* 0x0464 */ uint32_t SetTimerResolution : 1; /* bit position: 12 */
+      /* 0x0464 */ uint32_t BreakOnTermination : 1; /* bit position: 13 */
+      /* 0x0464 */ uint32_t DeprioritizeViews : 1; /* bit position: 14 */
+      /* 0x0464 */ uint32_t WriteWatch : 1; /* bit position: 15 */
+      /* 0x0464 */ uint32_t ProcessInSession : 1; /* bit position: 16 */
+      /* 0x0464 */ uint32_t OverrideAddressSpace : 1; /* bit position: 17 */
+      /* 0x0464 */ uint32_t HasAddressSpace : 1; /* bit position: 18 */
+      /* 0x0464 */ uint32_t LaunchPrefetched : 1; /* bit position: 19 */
+      /* 0x0464 */ uint32_t Reserved : 1; /* bit position: 20 */
+      /* 0x0464 */ uint32_t VmTopDown : 1; /* bit position: 21 */
+      /* 0x0464 */ uint32_t ImageNotifyDone : 1; /* bit position: 22 */
+      /* 0x0464 */ uint32_t PdeUpdateNeeded : 1; /* bit position: 23 */
+      /* 0x0464 */ uint32_t VdmAllowed : 1; /* bit position: 24 */
+      /* 0x0464 */ uint32_t ProcessRundown : 1; /* bit position: 25 */
+      /* 0x0464 */ uint32_t ProcessInserted : 1; /* bit position: 26 */
+      /* 0x0464 */ uint32_t DefaultIoPriority : 3; /* bit position: 27 */
+      /* 0x0464 */ uint32_t ProcessSelfDelete : 1; /* bit position: 30 */
+      /* 0x0464 */ uint32_t SetTimerResolutionLink : 1; /* bit position: 31 */
+    }; /* bitfield */
+  }; /* size: 0x0004 */
+  /* 0x0468 */ union _LARGE_INTEGER CreateTime;
+  /* 0x0470 */ uint64_t ProcessQuotaUsage[2];
+  /* 0x0480 */ uint64_t ProcessQuotaPeak[2];
+  /* 0x0490 */ uint64_t PeakVirtualSize;
+  /* 0x0498 */ uint64_t VirtualSize;
+  /* 0x04a0 */ struct _LIST_ENTRY SessionProcessLinks;
+  union
+  {
+    /* 0x04b0 */ void* ExceptionPortData;
+    /* 0x04b0 */ uint64_t ExceptionPortValue;
+    /* 0x04b0 */ uint64_t ExceptionPortState : 3; /* bit position: 0 */
+  }; /* size: 0x0008 */
+  /* 0x04b8 */ struct _EX_FAST_REF Token;
+  /* 0x04c0 */ uint64_t MmReserved;
+  /* 0x04c8 */ struct _EX_PUSH_LOCK AddressCreationLock;
+  /* 0x04d0 */ struct _EX_PUSH_LOCK PageTableCommitmentLock;
+  /* 0x04d8 */ struct _ETHREAD* RotateInProgress;
+  /* 0x04e0 */ struct _ETHREAD* ForkInProgress;
+  /* 0x04e8 */ struct _EJOB* volatile CommitChargeJob;
+  /* 0x04f0 */ struct _RTL_AVL_TREE CloneRoot;
+  /* 0x04f8 */ volatile uint64_t NumberOfPrivatePages;
+  /* 0x0500 */ volatile uint64_t NumberOfLockedPages;
+  /* 0x0508 */ void* Win32Process;
+  /* 0x0510 */ struct _EJOB* volatile Job;
+  /* 0x0518 */ void* SectionObject;
+  /* 0x0520 */ void* SectionBaseAddress;
+  /* 0x0528 */ uint32_t Cookie;
+  /* 0x052c */ long Padding_0;
+  /* 0x0530 */ struct _PAGEFAULT_HISTORY* WorkingSetWatch;
+  /* 0x0538 */ void* Win32WindowStation;
+  /* 0x0540 */ void* InheritedFromUniqueProcessId;
+  /* 0x0548 */ volatile uint64_t OwnerProcessId;
+  /* 0x0550 */ struct _PEB* Peb;
+  /* 0x0558 */ struct _MM_SESSION_SPACE* Session;
+  /* 0x0560 */ void* Spare1;
+  /* 0x0568 */ struct _EPROCESS_QUOTA_BLOCK* QuotaBlock;
+  /* 0x0570 */ struct _HANDLE_TABLE* ObjectTable;
+  /* 0x0578 */ void* DebugPort;
+  /* 0x0580 */ struct _EWOW64PROCESS* WoW64Process;
+  /* 0x0588 */ struct _EX_FAST_REF DeviceMap;
+  /* 0x0590 */ void* EtwDataSource;
+  /* 0x0598 */ uint64_t PageDirectoryPte;
+  /* 0x05a0 */ struct _FILE_OBJECT* ImageFilePointer;
+  /* 0x05a8 */ uint8_t ImageFileName[15];
+  /* 0x05b7 */ uint8_t PriorityClass;
+  /* 0x05b8 */ void* SecurityPort;
+  /* 0x05c0 */ struct _SE_AUDIT_PROCESS_CREATION_INFO SeAuditProcessCreationInfo;
+  /* 0x05c8 */ struct _LIST_ENTRY JobLinks;
+  /* 0x05d8 */ void* HighestUserAddress;
+  /* 0x05e0 */ struct _LIST_ENTRY ThreadListHead;
+  /* 0x05f0 */ volatile uint32_t ActiveThreads;
+  /* 0x05f4 */ uint32_t ImagePathHash;
+  /* 0x05f8 */ uint32_t DefaultHardErrorProcessing;
+  /* 0x05fc */ int32_t LastThreadExitStatus;
+  /* 0x0600 */ struct _EX_FAST_REF PrefetchTrace;
+  /* 0x0608 */ void* LockedPagesList;
+  /* 0x0610 */ union _LARGE_INTEGER ReadOperationCount;
+  /* 0x0618 */ union _LARGE_INTEGER WriteOperationCount;
+  /* 0x0620 */ union _LARGE_INTEGER OtherOperationCount;
+  /* 0x0628 */ union _LARGE_INTEGER ReadTransferCount;
+  /* 0x0630 */ union _LARGE_INTEGER WriteTransferCount;
+  /* 0x0638 */ union _LARGE_INTEGER OtherTransferCount;
+  /* 0x0640 */ uint64_t CommitChargeLimit;
+  /* 0x0648 */ volatile uint64_t CommitCharge;
+  /* 0x0650 */ volatile uint64_t CommitChargePeak;
+  /* 0x0658 */ long Padding_1[10];
+  /* 0x0680 */ struct _MMSUPPORT_FULL Vm;
+  /* 0x07c0 */ struct _LIST_ENTRY MmProcessLinks;
+  /* 0x07d0 */ uint32_t ModifiedPageCount;
+  /* 0x07d4 */ int32_t ExitStatus;
+  /* 0x07d8 */ struct _RTL_AVL_TREE VadRoot;
+  /* 0x07e0 */ void* VadHint;
+  /* 0x07e8 */ uint64_t VadCount;
+  /* 0x07f0 */ volatile uint64_t VadPhysicalPages;
+  /* 0x07f8 */ uint64_t VadPhysicalPagesLimit;
+  /* 0x0800 */ struct _ALPC_PROCESS_CONTEXT AlpcContext;
+  /* 0x0820 */ struct _LIST_ENTRY TimerResolutionLink;
+  /* 0x0830 */ struct _PO_DIAG_STACK_RECORD* TimerResolutionStackRecord;
+  /* 0x0838 */ uint32_t RequestedTimerResolution;
+  /* 0x083c */ uint32_t SmallestTimerResolution;
+  /* 0x0840 */ union _LARGE_INTEGER ExitTime;
+  /* 0x0848 */ struct _INVERTED_FUNCTION_TABLE_KERNEL_MODE* InvertedFunctionTable;
+  /* 0x0850 */ struct _EX_PUSH_LOCK InvertedFunctionTableLock;
+  /* 0x0858 */ uint32_t ActiveThreadsHighWatermark;
+  /* 0x085c */ uint32_t LargePrivateVadCount;
+  /* 0x0860 */ struct _EX_PUSH_LOCK ThreadListLock;
+  /* 0x0868 */ void* WnfContext;
+  /* 0x0870 */ struct _EJOB* ServerSilo;
+  /* 0x0878 */ uint8_t SignatureLevel;
+  /* 0x0879 */ uint8_t SectionSignatureLevel;
+  /* 0x087a */ struct _PS_PROTECTION Protection;
+  struct /* bitfield */
+  {
+    /* 0x087b */ uint8_t HangCount : 3; /* bit position: 0 */
+    /* 0x087b */ uint8_t GhostCount : 3; /* bit position: 3 */
+    /* 0x087b */ uint8_t PrefilterException : 1; /* bit position: 6 */
+  }; /* bitfield */
+  union
+  {
+    /* 0x087c */ uint32_t Flags3;
+    struct /* bitfield */
+    {
+      /* 0x087c */ uint32_t Minimal : 1; /* bit position: 0 */
+      /* 0x087c */ uint32_t ReplacingPageRoot : 1; /* bit position: 1 */
+      /* 0x087c */ uint32_t Crashed : 1; /* bit position: 2 */
+      /* 0x087c */ uint32_t JobVadsAreTracked : 1; /* bit position: 3 */
+      /* 0x087c */ uint32_t VadTrackingDisabled : 1; /* bit position: 4 */
+      /* 0x087c */ uint32_t AuxiliaryProcess : 1; /* bit position: 5 */
+      /* 0x087c */ uint32_t SubsystemProcess : 1; /* bit position: 6 */
+      /* 0x087c */ uint32_t IndirectCpuSets : 1; /* bit position: 7 */
+      /* 0x087c */ uint32_t RelinquishedCommit : 1; /* bit position: 8 */
+      /* 0x087c */ uint32_t HighGraphicsPriority : 1; /* bit position: 9 */
+      /* 0x087c */ uint32_t CommitFailLogged : 1; /* bit position: 10 */
+      /* 0x087c */ uint32_t ReserveFailLogged : 1; /* bit position: 11 */
+      /* 0x087c */ uint32_t SystemProcess : 1; /* bit position: 12 */
+      /* 0x087c */ uint32_t HideImageBaseAddresses : 1; /* bit position: 13 */
+      /* 0x087c */ uint32_t AddressPolicyFrozen : 1; /* bit position: 14 */
+      /* 0x087c */ uint32_t ProcessFirstResume : 1; /* bit position: 15 */
+      /* 0x087c */ uint32_t ForegroundExternal : 1; /* bit position: 16 */
+      /* 0x087c */ uint32_t ForegroundSystem : 1; /* bit position: 17 */
+      /* 0x087c */ uint32_t HighMemoryPriority : 1; /* bit position: 18 */
+      /* 0x087c */ uint32_t EnableProcessSuspendResumeLogging : 1; /* bit position: 19 */
+      /* 0x087c */ uint32_t EnableThreadSuspendResumeLogging : 1; /* bit position: 20 */
+      /* 0x087c */ uint32_t SecurityDomainChanged : 1; /* bit position: 21 */
+      /* 0x087c */ uint32_t SecurityFreezeComplete : 1; /* bit position: 22 */
+      /* 0x087c */ uint32_t VmProcessorHost : 1; /* bit position: 23 */
+      /* 0x087c */ uint32_t VmProcessorHostTransition : 1; /* bit position: 24 */
+      /* 0x087c */ uint32_t AltSyscall : 1; /* bit position: 25 */
+      /* 0x087c */ uint32_t TimerResolutionIgnore : 1; /* bit position: 26 */
+      /* 0x087c */ uint32_t DisallowUserTerminate : 1; /* bit position: 27 */
+      /* 0x087c */ uint32_t EnableProcessRemoteExecProtectVmLogging : 1; /* bit position: 28 */
+      /* 0x087c */ uint32_t EnableProcessLocalExecProtectVmLogging : 1; /* bit position: 29 */
+      /* 0x087c */ uint32_t MemoryCompressionProcess : 1; /* bit position: 30 */
+    }; /* bitfield */
+  }; /* size: 0x0004 */
+  /* 0x0880 */ int32_t DeviceAsid;
+  /* 0x0884 */ long Padding_2;
+  /* 0x0888 */ void* SvmData;
+  /* 0x0890 */ struct _EX_PUSH_LOCK SvmProcessLock;
+  /* 0x0898 */ uint64_t SvmLock;
+  /* 0x08a0 */ struct _LIST_ENTRY SvmProcessDeviceListHead;
+  /* 0x08b0 */ uint64_t LastFreezeInterruptTime;
+  /* 0x08b8 */ struct _PROCESS_DISK_COUNTERS* DiskCounters;
+  /* 0x08c0 */ void* PicoContext;
+  /* 0x08c8 */ void* EnclaveTable;
+  /* 0x08d0 */ uint64_t EnclaveNumber;
+  /* 0x08d8 */ struct _EX_PUSH_LOCK EnclaveLock;
+  /* 0x08e0 */ uint32_t HighPriorityFaultsAllowed;
+  /* 0x08e4 */ long Padding_3;
+  /* 0x08e8 */ struct _PO_PROCESS_ENERGY_CONTEXT* EnergyContext;
+  /* 0x08f0 */ void* VmContext;
+  /* 0x08f8 */ uint64_t SequenceNumber;
+  /* 0x0900 */ uint64_t CreateInterruptTime;
+  /* 0x0908 */ uint64_t CreateUnbiasedInterruptTime;
+  /* 0x0910 */ uint64_t TotalUnbiasedFrozenTime;
+  /* 0x0918 */ uint64_t LastAppStateUpdateTime;
+  struct /* bitfield */
+  {
+    /* 0x0920 */ uint64_t LastAppStateUptime : 61; /* bit position: 0 */
+    /* 0x0920 */ uint64_t LastAppState : 3; /* bit position: 61 */
+  }; /* bitfield */
+  /* 0x0928 */ volatile uint64_t SharedCommitCharge;
+  /* 0x0930 */ struct _EX_PUSH_LOCK SharedCommitLock;
+  /* 0x0938 */ struct _LIST_ENTRY SharedCommitLinks;
+  union
+  {
+    struct
+    {
+      /* 0x0948 */ uint64_t AllowedCpuSets;
+      /* 0x0950 */ uint64_t DefaultCpuSets;
+    }; /* size: 0x0010 */
+    struct
+    {
+      /* 0x0948 */ uint64_t* AllowedCpuSetsIndirect;
+      /* 0x0950 */ uint64_t* DefaultCpuSetsIndirect;
+    }; /* size: 0x0010 */
+  }; /* size: 0x0010 */
+  /* 0x0958 */ void* DiskIoAttribution;
+  /* 0x0960 */ void* DxgProcess;
+  /* 0x0968 */ uint32_t Win32KFilterSet;
+  /* 0x096c */ uint16_t Machine;
+  /* 0x096e */ uint16_t Spare0;
+  /* 0x0970 */ volatile union _PS_INTERLOCKED_TIMER_DELAY_VALUES ProcessTimerDelay;
+  /* 0x0978 */ volatile uint32_t KTimerSets;
+  /* 0x097c */ volatile uint32_t KTimer2Sets;
+  /* 0x0980 */ volatile uint32_t ThreadTimerSets;
+  /* 0x0984 */ long Padding_4;
+  /* 0x0988 */ uint64_t VirtualTimerListLock;
+  /* 0x0990 */ struct _LIST_ENTRY VirtualTimerListHead;
+  union
+  {
+    /* 0x09a0 */ struct _WNF_STATE_NAME WakeChannel;
+    /* 0x09a0 */ struct _PS_PROCESS_WAKE_INFORMATION WakeInfo;
+  }; /* size: 0x0030 */
+  union
+  {
+    /* 0x09d0 */ uint32_t MitigationFlags;
+    /* 0x09d0 */ struct _TAG_UNNAMED_1 MitigationFlagsValues;
+  }; /* size: 0x0004 */
+  union
+  {
+    /* 0x09d4 */ uint32_t MitigationFlags2;
+    /* 0x09d4 */ struct _TAG_UNNAMED_2 MitigationFlags2Values;
+  }; /* size: 0x0004 */
+  /* 0x09d8 */ void* PartitionObject;
+  /* 0x09e0 */ uint64_t SecurityDomain;
+  /* 0x09e8 */ uint64_t ParentSecurityDomain;
+  /* 0x09f0 */ void* CoverageSamplerContext;
+  /* 0x09f8 */ void* MmHotPatchContext;
+  /* 0x0a00 */ struct _KE_IDEAL_PROCESSOR_ASSIGNMENT_BLOCK IdealProcessorAssignmentBlock;
+  /* 0x0b18 */ struct _RTL_AVL_TREE DynamicEHContinuationTargetsTree;
+  /* 0x0b20 */ struct _EX_PUSH_LOCK DynamicEHContinuationTargetsLock;
+  /* 0x0b28 */ struct _PS_DYNAMIC_ENFORCED_ADDRESS_RANGES DynamicEnforcedCetCompatibleRanges;
+  /* 0x0b38 */ uint32_t DisabledComponentFlags;
+  /* 0x0b3c */ volatile int32_t PageCombineSequence;
+  /* 0x0b40 */ struct _EX_PUSH_LOCK EnableOptionalXStateFeaturesLock;
+  /* 0x0b48 */ uint32_t* volatile PathRedirectionHashes;
+  /* 0x0b50 */ struct _PS_SYSCALL_PROVIDER* SyscallProvider;
+  /* 0x0b58 */ struct _LIST_ENTRY SyscallProviderProcessLinks;
+  /* 0x0b68 */ struct _PSP_SYSCALL_PROVIDER_DISPATCH_CONTEXT SyscallProviderDispatchContext;
+  union
+  {
+    /* 0x0b70 */ uint32_t MitigationFlags3;
+    /* 0x0b70 */ struct _TAG_UNNAMED_3 MitigationFlags3Values;
+  }; /* size: 0x0004 */
+  /* 0x0b74 */ int32_t __PADDING__[3];
+} EPROCESS, *PEPROCESS; /* size: 0x0b80 */
+
