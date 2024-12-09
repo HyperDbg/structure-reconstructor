@@ -6,6 +6,13 @@ use std::io::{BufRead, BufReader};
 use zydis::*;
 use std::fs::OpenOptions;
 use std::io::Write;
+use std::sync::Mutex;
+use lazy_static::lazy_static;
+
+// Declare a global, thread-safe vector using `lazy_static`
+lazy_static! {
+    static ref GLOBAL_VECTOR: Mutex<Vec<u64>> = Mutex::new(Vec::new());
+}
 
 #[rustfmt::skip]
 static CODE: &'static [u8] = &[
@@ -32,19 +39,28 @@ impl StructStoredDetail {
     }
 }
 
+//
 // Define a global vector to store StructStoredDetail
+//
 static mut MY_VECTOR: Vec<StructStoredDetail> = Vec::new();
 static mut idx: u32 = 0;
 
-
 fn add_to_vector_if_not_exists(rip: u64, context: u64, index: u32, size: u8) -> bool {
+
+    //
     // Safety: Using unsafe to work with the global vector
+    //
     unsafe {
         if MY_VECTOR.iter().any(|item| item.rip == rip && item.context == context && item.index == index && item.size == size) {
+
+            //
             // The item is already in the vector, return false
+            //
             false
         } else {
+            //
             // The item is not in the vector, add it and return true
+            //
             MY_VECTOR.push(StructStoredDetail::new(rip, context, index, size));
             true
         }
@@ -52,9 +68,14 @@ fn add_to_vector_if_not_exists(rip: u64, context: u64, index: u32, size: u8) -> 
 }
 
 fn print_vector() {
+
+    //
     // Safety: Using unsafe to work with the global vector
+    //
     unsafe {
+        //
         // Sort the vector by the "index" field
+        //
         MY_VECTOR.sort_by(|a, b| a.index.cmp(&b.index));
 
         for item in &MY_VECTOR {
@@ -68,21 +89,47 @@ fn print_structure(index: u32) {
     let mut first_index = true;
     let mut field_index = 0;
 
+    //
     // Open the file in append mode (or create it if it doesn't exist)
+    //
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open("structs.h")
         .expect("Unable to open or create file");
 
+    //
     // Safety: Using unsafe to work with the global vector
+    //
     unsafe {
+
+        //
         // Sort the vector by the "index" field
+        //
         MY_VECTOR.sort_by(|a, b| a.index.cmp(&b.index));
+
+        let mut vec = GLOBAL_VECTOR.lock().unwrap(); // Acquire a lock to access the vector
+        if !vec.contains(&MY_VECTOR[0].rip) { // Check if the value already exists
+           vec.push(MY_VECTOR[0].rip); // Add it if not
+        }
+        else {
+            //
+            // Item is already in the vector (we see the same structure from this address, so only
+            // count it once)
+            //
+            println!(
+                "item already exists at: {}\n the same structure from this address, so only reconstruct it once\n",
+                MY_VECTOR[0].rip
+            );
+
+            return;
+        }
 
         let mut output = String::new();
 
+        //
         // Write the typedef structure opening line
+        //
         output.push_str(&format!("typedef struct MY_STRUCT_{} {{\n", index));
 
         for item in &MY_VECTOR {
@@ -90,7 +137,9 @@ fn print_structure(index: u32) {
                 current_index = item.index;
                 first_index = false;
 
+                //
                 // Add the formatted string to output
+                //
                 output.push_str(&format!("\t/* 0x{:04x} */ ", item.index));
 
                 if item.size == 64 {
@@ -109,13 +158,19 @@ fn print_structure(index: u32) {
             }
         }
 
+        //
         // Close the structure
+        //
         output.push_str("};\n");
 
+        //
         // Print the output to console
+        //
         print!("{}", output);
 
+        //
         // Write the output to the file
+        //
         file.write_all(output.as_bytes())
             .expect("Failed to write to file");
     }
@@ -183,32 +238,32 @@ fn zydis_disasm_interpret(code: &[u8],
                  insn.operand_count);
 
         println!("zydis {:016x} {}", ip, fmt.format(Some(ip), &insn)?);
-		
-		if insn.mnemonic == Mnemonic::POP ||
-        insn.mnemonic == Mnemonic::POPA ||
-        insn.mnemonic == Mnemonic::POPAD ||
-        insn.mnemonic == Mnemonic::POPCNT ||
-        insn.mnemonic == Mnemonic::POPF ||
-        insn.mnemonic == Mnemonic::POPFD ||
-        insn.mnemonic == Mnemonic::POPFQ ||
-        insn.mnemonic == Mnemonic::PUSH ||
-        insn.mnemonic == Mnemonic::PUSHA ||
-        insn.mnemonic == Mnemonic::PUSHAD ||
-        insn.mnemonic == Mnemonic::PUSHF ||
-        insn.mnemonic == Mnemonic::PUSHFD ||
-        insn.mnemonic == Mnemonic::PUSHFQ ||
-        insn.mnemonic == Mnemonic::RET 
+
+       if insn.mnemonic == Mnemonic::POP ||
+            insn.mnemonic == Mnemonic::POPA ||
+            insn.mnemonic == Mnemonic::POPAD ||
+            insn.mnemonic == Mnemonic::POPCNT ||
+            insn.mnemonic == Mnemonic::POPF ||
+            insn.mnemonic == Mnemonic::POPFD ||
+            insn.mnemonic == Mnemonic::POPFQ ||
+            insn.mnemonic == Mnemonic::PUSH ||
+            insn.mnemonic == Mnemonic::PUSHA ||
+            insn.mnemonic == Mnemonic::PUSHAD ||
+            insn.mnemonic == Mnemonic::PUSHF ||
+            insn.mnemonic == Mnemonic::PUSHFD ||
+            insn.mnemonic == Mnemonic::PUSHFQ ||
+            insn.mnemonic == Mnemonic::RET 
         {
             // print!("creating the layout for a new structure\n");
 
             unsafe {
-                if (MY_VECTOR.len() != 0 && MY_VECTOR.len() != 1) {
+                if MY_VECTOR.len() != 0 && MY_VECTOR.len() != 1 {
                     print_vector();
                     print_structure(idx);
                     idx = idx + 1;
                 }
 
-                 MY_VECTOR.clear() 
+                 MY_VECTOR.clear();
             };
         
             continue;
@@ -269,7 +324,7 @@ fn parse_hex_to_u64(hex_str: &str) -> std::result::Result<u64, ParseIntError> {
     u64::from_str_radix(hex_str.trim_start_matches("0x"), 16)
 }
 
- fn main() -> io::Result<()>  {
+ fn main() -> io::Result<()> {
 
     //
     // Get the command-line arguments
